@@ -1,5 +1,5 @@
-const N8N_URL = import.meta.env.VITE_N8N_URL as string;
-const N8N_API_KEY = import.meta.env.VITE_N8N_API_KEY as string;
+const N8N_URL = (import.meta.env.VITE_N8N_URL as string) ?? "https://automacao.ieneassessoria.com.br";
+const N8N_API_KEY = (import.meta.env.VITE_N8N_API_KEY as string) ?? "";
 
 const headers = {
   "X-N8N-API-KEY": N8N_API_KEY,

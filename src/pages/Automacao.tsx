@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { n8n, type N8nWorkflow, type N8nExecution } from "@/lib/n8n";
 
-const N8N_URL = import.meta.env.VITE_N8N_URL as string;
+const N8N_URL = (import.meta.env.VITE_N8N_URL as string) ?? "https://automacao.ieneassessoria.com.br";
 
 function statusIcon(status: N8nExecution["status"]) {
   if (status === "success") return <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />;

@@ -1,6 +1,6 @@
-const CW_URL = import.meta.env.VITE_CHATWOOT_URL as string;
-const CW_TOKEN = import.meta.env.VITE_CHATWOOT_TOKEN as string;
-const CW_ACCOUNT = import.meta.env.VITE_CHATWOOT_ACCOUNT as string;
+const CW_URL = (import.meta.env.VITE_CHATWOOT_URL as string) ?? "https://chat.ieneassessoria.com.br";
+const CW_TOKEN = (import.meta.env.VITE_CHATWOOT_TOKEN as string) ?? "ZtgDLEF4TtVzqX1R55TcGSC2";
+const CW_ACCOUNT = (import.meta.env.VITE_CHATWOOT_ACCOUNT as string) ?? "1";
 
 const headers = { api_access_token: CW_TOKEN };
 

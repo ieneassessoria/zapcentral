@@ -8,8 +8,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { chatwoot, type CWConversation } from "@/lib/chatwoot";
 
-const CW_URL = import.meta.env.VITE_CHATWOOT_URL as string;
-const CW_ACCOUNT = import.meta.env.VITE_CHATWOOT_ACCOUNT as string;
+const CW_URL = (import.meta.env.VITE_CHATWOOT_URL as string) ?? "https://chat.ieneassessoria.com.br";
+const CW_ACCOUNT = (import.meta.env.VITE_CHATWOOT_ACCOUNT as string) ?? "1";
 
 const statusLabel: Record<string, string> = {
   open: "Aberta",

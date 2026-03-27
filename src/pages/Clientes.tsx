@@ -7,8 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { chatwoot } from "@/lib/chatwoot";
 
-const CW_URL = import.meta.env.VITE_CHATWOOT_URL as string;
-const CW_ACCOUNT = import.meta.env.VITE_CHATWOOT_ACCOUNT as string;
+const CW_URL = (import.meta.env.VITE_CHATWOOT_URL as string) ?? "https://chat.ieneassessoria.com.br";
+const CW_ACCOUNT = (import.meta.env.VITE_CHATWOOT_ACCOUNT as string) ?? "1";
 
 function formatDate(iso: string | null) {
   if (!iso) return "—";
