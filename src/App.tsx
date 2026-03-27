@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppLayout } from "@/components/AppLayout";
+import LandingPage from "./pages/LandingPage";
 import Index from "./pages/Index";
 import CRM from "./pages/CRM";
 import Chat from "./pages/Chat";
@@ -16,25 +17,32 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const AppRoutes = () => (
+  <AppLayout>
+    <Routes>
+      <Route path="/dashboard" element={<Index />} />
+      <Route path="/crm" element={<CRM />} />
+      <Route path="/chat" element={<Chat />} />
+      <Route path="/ai" element={<AI />} />
+      <Route path="/automacao" element={<Automacao />} />
+      <Route path="/clientes" element={<Clientes />} />
+      <Route path="/relatorios" element={<Relatorios />} />
+      <Route path="/configuracoes" element={<Configuracoes />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </AppLayout>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AppLayout>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/crm" element={<CRM />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/ai" element={<AI />} />
-            <Route path="/automacao" element={<Automacao />} />
-            <Route path="/clientes" element={<Clientes />} />
-            <Route path="/relatorios" element={<Relatorios />} />
-            <Route path="/configuracoes" element={<Configuracoes />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AppLayout>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/*" element={<AppRoutes />} />
+        </Routes>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
