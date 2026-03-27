@@ -1,32 +1,44 @@
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, CheckCircle2, Clock, Upload } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { FileText, CheckCircle2, Clock, Upload, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 type DocumentStatus = "Recebido" | "Pendente" | "Parcial";
 
 interface DocumentRequest {
   id: number;
   hospede: string;
+  whatsapp: string;
   imovel: string;
   documentos: string[];
   status: DocumentStatus;
   data: string;
 }
 
-const documentRequests: DocumentRequest[] = [
-  { id: 1, hospede: "Ana Lima", imovel: "Apto 302 — Copacabana", documentos: ["RG", "CPF", "Contrato"], status: "Recebido", data: "24/03/2026" },
-  { id: 2, hospede: "Carlos Mendes", imovel: "Casa Praia — Búzios", documentos: ["RG", "CPF"], status: "Recebido", data: "23/03/2026" },
-  { id: 3, hospede: "Beatriz Souza", imovel: "Studio 101 — Ipanema", documentos: ["RG", "CPF", "Contrato"], status: "Parcial", data: "22/03/2026" },
-  { id: 4, hospede: "Rafael Torres", imovel: "Apto 501 — Barra", documentos: ["RG", "Contrato"], status: "Pendente", data: "21/03/2026" },
-  { id: 5, hospede: "Fernanda Costa", imovel: "Cobertura — Leblon", documentos: ["RG", "CPF", "Contrato"], status: "Recebido", data: "20/03/2026" },
-  { id: 6, hospede: "João Pereira", imovel: "Chalé — Serra Gaúcha", documentos: ["CPF", "Contrato"], status: "Pendente", data: "19/03/2026" },
-  { id: 7, hospede: "Mariana Alves", imovel: "Apto 204 — Floripa", documentos: ["RG", "CPF", "Contrato"], status: "Recebido", data: "18/03/2026" },
-  { id: 8, hospede: "Pedro Nunes", imovel: "Casa 7 — Gramado", documentos: ["RG", "CPF"], status: "Parcial", data: "17/03/2026" },
-  { id: 9, hospede: "Luciana Rocha", imovel: "Studio 03 — Arraial", documentos: ["RG", "CPF", "Contrato"], status: "Recebido", data: "16/03/2026" },
-  { id: 10, hospede: "Thiago Barbosa", imovel: "Apto 810 — Fortaleza", documentos: ["Contrato"], status: "Pendente", data: "15/03/2026" },
-];
+const DOCS_OPTIONS = ["RG", "CPF", "Contrato", "Comprovante de residência", "CNH"];
+
+const schema = z.object({
+  hospede: z.string().min(2, "Informe o nome do hóspede"),
+  whatsapp: z.string().min(10, "Informe o WhatsApp"),
+  imovel: z.string().min(2, "Informe o imóvel"),
+  documentos: z.array(z.string()).min(1, "Selecione ao menos um documento"),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 const statusStyles: Record<DocumentStatus, string> = {
   Recebido: "bg-success/10 text-success border-success/20",
@@ -34,93 +46,134 @@ const statusStyles: Record<DocumentStatus, string> = {
   Pendente: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
+const initialRequests: DocumentRequest[] = [
+  { id: 1, hospede: "Ana Lima", whatsapp: "+5521999990001", imovel: "Apto 302 — Copacabana", documentos: ["RG", "CPF", "Contrato"], status: "Recebido", data: "24/03/2026" },
+  { id: 2, hospede: "Carlos Mendes", whatsapp: "+5521999990002", imovel: "Casa Praia — Búzios", documentos: ["RG", "CPF"], status: "Recebido", data: "23/03/2026" },
+  { id: 3, hospede: "Beatriz Souza", whatsapp: "+5521999990003", imovel: "Studio 101 — Ipanema", documentos: ["RG", "CPF", "Contrato"], status: "Parcial", data: "22/03/2026" },
+  { id: 4, hospede: "Rafael Torres", whatsapp: "+5521999990004", imovel: "Apto 501 — Barra", documentos: ["RG", "Contrato"], status: "Pendente", data: "21/03/2026" },
+  { id: 5, hospede: "Fernanda Costa", whatsapp: "+5521999990005", imovel: "Cobertura — Leblon", documentos: ["RG", "CPF", "Contrato"], status: "Recebido", data: "20/03/2026" },
+];
+
 export default function Documentos() {
+  const [requests, setRequests] = useState<DocumentRequest[]>(initialRequests);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { hospede: "", whatsapp: "", imovel: "", documentos: [] },
+  });
+
+  async function onSubmit(values: FormValues) {
+    setSubmitting(true);
+    await new Promise((r) => setTimeout(r, 800));
+
+    const newRequest: DocumentRequest = {
+      id: Date.now(),
+      hospede: values.hospede,
+      whatsapp: values.whatsapp,
+      imovel: values.imovel,
+      documentos: values.documentos,
+      status: "Pendente",
+      data: new Date().toLocaleDateString("pt-BR"),
+    };
+
+    setRequests((prev) => [newRequest, ...prev]);
+    setSubmitting(false);
+    setDialogOpen(false);
+    form.reset();
+    toast.success(`Solicitação enviada para ${values.hospede} via WhatsApp.`);
+  }
+
+  const recebidos = requests.filter((r) => r.status === "Recebido").length;
+  const pendentes = requests.filter((r) => r.status === "Pendente").length;
+  const taxa = Math.round((recebidos / requests.length) * 100);
+
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Documentos — Coleta via WhatsApp</h1>
-          <p className="text-muted-foreground text-sm">Gerencie solicitações de documentos enviadas aos hóspedes</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Documentos</h1>
+          <p className="text-sm text-muted-foreground">Coleta de documentos via WhatsApp</p>
         </div>
-        <Button className="flex items-center gap-2">
-          <Upload className="h-4 w-4" />
+        <Button onClick={() => setDialogOpen(true)}>
+          <Upload className="h-4 w-4 mr-2" />
           Solicitar Documentos
         </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="hover:shadow-md transition-shadow">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-muted-foreground">Solicitações Enviadas</span>
+              <span className="text-sm text-muted-foreground">Solicitações</span>
               <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
                 <FileText className="h-4 w-4 text-primary" />
               </div>
             </div>
-            <div className="text-2xl font-bold">47</div>
-            <div className="text-xs text-muted-foreground mt-1">Total do mês</div>
+            <div className="text-2xl font-semibold">{requests.length}</div>
+            <div className="text-xs text-muted-foreground mt-1">Total</div>
           </CardContent>
         </Card>
-
-        <Card className="hover:shadow-md transition-shadow">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-muted-foreground">Documentos Recebidos</span>
-              <div className="h-9 w-9 rounded-lg bg-success/10 flex items-center justify-center">
-                <CheckCircle2 className="h-4 w-4 text-success" />
+              <span className="text-sm text-muted-foreground">Recebidos</span>
+              <div className="h-9 w-9 rounded-lg bg-green-500/10 flex items-center justify-center">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
               </div>
             </div>
-            <div className="text-2xl font-bold">38</div>
+            <div className="text-2xl font-semibold">{recebidos}</div>
             <div className="text-xs text-muted-foreground mt-1">Completos</div>
           </CardContent>
         </Card>
-
-        <Card className="hover:shadow-md transition-shadow">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-muted-foreground">Pendentes</span>
+              <span className="text-sm text-muted-foreground">Pendentes</span>
               <div className="h-9 w-9 rounded-lg bg-destructive/10 flex items-center justify-center">
                 <Clock className="h-4 w-4 text-destructive" />
               </div>
             </div>
-            <div className="text-2xl font-bold">9</div>
-            <div className="text-xs text-muted-foreground mt-1">Aguardando retorno</div>
+            <div className="text-2xl font-semibold">{pendentes}</div>
+            <div className="text-xs text-muted-foreground mt-1">Aguardando</div>
           </CardContent>
         </Card>
-
-        <Card className="hover:shadow-md transition-shadow">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-muted-foreground">Taxa de Retorno</span>
+              <span className="text-sm text-muted-foreground">Taxa de Retorno</span>
               <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Upload className="h-4 w-4 text-primary" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-primary">81%</div>
-            <div className="text-xs text-muted-foreground mt-1">Docs recebidos / enviados</div>
+            <div className="text-2xl font-semibold text-primary">{taxa}%</div>
+            <div className="text-xs text-muted-foreground mt-1">Recebidos / Total</div>
           </CardContent>
         </Card>
       </div>
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold">Solicitações Recentes</CardTitle>
+          <CardTitle className="text-base font-semibold">Solicitações</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Hóspede</TableHead>
+                <TableHead>WhatsApp</TableHead>
                 <TableHead>Imóvel</TableHead>
-                <TableHead>Documentos Solicitados</TableHead>
+                <TableHead>Documentos</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Data</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {documentRequests.map((req) => (
+              {requests.map((req) => (
                 <TableRow key={req.id} className="hover:bg-muted/30">
                   <TableCell className="font-medium">{req.hospede}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{req.whatsapp}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{req.imovel}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
@@ -141,6 +194,86 @@ export default function Documentos() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Dialog solicitar documentos */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Solicitar Documentos</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField control={form.control} name="hospede" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome do hóspede</FormLabel>
+                  <FormControl><Input placeholder="Nome completo" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <FormField control={form.control} name="whatsapp" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>WhatsApp</FormLabel>
+                  <FormControl>
+                    <Input placeholder="(11) 99999-9999" inputMode="tel" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <FormField control={form.control} name="imovel" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Imóvel</FormLabel>
+                  <FormControl><Input placeholder="Ex: Apto 302 — Copacabana" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <FormField control={form.control} name="documentos" render={() => (
+                <FormItem>
+                  <FormLabel>Documentos solicitados</FormLabel>
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    {DOCS_OPTIONS.map((doc) => (
+                      <FormField
+                        key={doc}
+                        control={form.control}
+                        name="documentos"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center gap-2 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value?.includes(doc)}
+                                onCheckedChange={(checked) => {
+                                  const current = field.value ?? [];
+                                  field.onChange(
+                                    checked ? [...current, doc] : current.filter((d) => d !== doc)
+                                  );
+                                }}
+                              />
+                            </FormControl>
+                            <FormLabel className="font-normal text-sm cursor-pointer">{doc}</FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={submitting}>
+                  {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Enviar solicitação
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
