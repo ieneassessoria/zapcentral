@@ -1,34 +1,8 @@
-const https = require("https");
-const http = require("http");
-const { URL } = require("url");
-
 const CW_URL = process.env.VITE_CHATWOOT_URL || "https://chat.ieneassessoria.com.br";
 const CW_TOKEN = process.env.VITE_CHATWOOT_TOKEN || "";
 const CW_ACCOUNT = process.env.VITE_CHATWOOT_ACCOUNT || "1";
 
-function doRequest(urlStr, method, headers, body) {
-  return new Promise((resolve, reject) => {
-    const parsed = new URL(urlStr);
-    const lib = parsed.protocol === "https:" ? https : http;
-    const options = {
-      hostname: parsed.hostname,
-      port: parsed.port || (parsed.protocol === "https:" ? 443 : 80),
-      path: parsed.pathname + parsed.search,
-      method,
-      headers,
-    };
-    const req = lib.request(options, (res) => {
-      let data = "";
-      res.on("data", (chunk) => (data += chunk));
-      res.on("end", () => resolve({ status: res.statusCode, body: data }));
-    });
-    req.on("error", reject);
-    if (body) req.write(body);
-    req.end();
-  });
-}
-
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
@@ -50,24 +24,19 @@ module.exports = async function handler(req, res) {
         ? JSON.stringify(req.body)
         : undefined;
 
-    const { status, body } = await doRequest(
-      url,
-      req.method,
-      {
+    const upstream = await fetch(url, {
+      method: req.method,
+      headers: {
         api_access_token: CW_TOKEN,
         "Content-Type": "application/json",
-        ...(bodyStr ? { "Content-Length": Buffer.byteLength(bodyStr) } : {}),
       },
-      bodyStr,
-    );
+      body: bodyStr,
+    });
 
-    res.status(status);
-    try {
-      res.json(JSON.parse(body));
-    } catch {
-      res.send(body);
-    }
+    const text = await upstream.text();
+    res.status(upstream.status);
+    try { res.json(JSON.parse(text)); } catch { res.send(text); }
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: String(err) });
   }
-};
+}
