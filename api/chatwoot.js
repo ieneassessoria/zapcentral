@@ -2,7 +2,7 @@ const CW_URL = process.env.VITE_CHATWOOT_URL || "https://chat.ieneassessoria.com
 const CW_TOKEN = process.env.VITE_CHATWOOT_TOKEN || "";
 const CW_ACCOUNT = process.env.VITE_CHATWOOT_ACCOUNT || "1";
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
@@ -39,4 +39,4 @@ export default async function handler(req, res) {
   } catch (err) {
     res.status(500).json({ error: String(err) });
   }
-}
+};
