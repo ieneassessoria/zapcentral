@@ -1,11 +1,14 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
   "functions": {
     "api/chatwoot.js": {
       "runtime": "nodejs20.x"
     }
   },
-  "routes": [
-    { "src": "/api/chatwoot(.*)", "dest": "/api/chatwoot.js" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/app/:path*", "destination": "/index.html" },
+    { "source": "/", "destination": "/index.html" }
   ]
 }
